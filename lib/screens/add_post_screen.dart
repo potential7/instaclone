@@ -1,16 +1,16 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:instaclone/models/post_model.dart';
 
 import 'package:provider/provider.dart';
 
 import '../Data/firestore_methods.dart';
-import '../models/post_Model.dart';
 import '../models/user_model.dart';
 import '../provider/user_provider.dart';
 import '../utils/color.dart';
 import '../utils/utils.dart';
+import '../models/post_model.dart';
+
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -48,7 +48,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 final Uint8List? file = await pickImage(ImageSource.gallery);
-                if (file == null) return;
+                if (file == null) {
+                  print("⚠️ No image selected.");
+                  return;
+                }
                 setState(() => _file = file);
               },
             ),
@@ -82,13 +85,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
     try {
       final response = await FirestoreMethods().uploadPost(
         PostModel(
-          descriptions: _descriptionController.text.trim(),
+          description: _descriptionController.text.trim(),
           userName: username,
           profileImage: profileImage,
           userId: userId,
-        ) as PostModel,
+        ),
         _file!,
       );
+
 
       if (response == "Success") {
         showSnackBar('Post uploaded successfully!', context);

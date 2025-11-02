@@ -4,6 +4,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:instaclone/provider/user_provider.dart';
 import 'package:instaclone/responsive/responsive_layerscreen.dart';
+import 'package:instaclone/screens/login_screen.dart';
+import 'package:instaclone/screens/mobile_screen.dart';
+import 'package:instaclone/screens/web_screen.dart';
 import 'package:instaclone/utils/color.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +22,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {

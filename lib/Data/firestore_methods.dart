@@ -20,6 +20,9 @@ class FirestoreMethods {
         file,
         true,
       );
+      if (photoUrl.isEmpty) {
+        throw Exception('Image upload failed');
+      }
 
       final postData = PostModel(
         postId: postId,
@@ -68,7 +71,6 @@ class FirestoreMethods {
   Future<void> postComment(CommentModel comment) async {
     try {
       if (comment.comment.trim().isEmpty) return;
-
       final commentId = const Uuid().v1();
 
       final commentData = {

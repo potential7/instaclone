@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:instagram/models/post_Model.dart';
-import 'package:instagram/utils/colors.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:instagram/widgets/post_card.dart';
+import '../models/post_Model.dart';
+import '../utils/color.dart';
+import '../widgets/post_card.dart';
 class FeedScreen extends StatelessWidget {
-  const FeedScreen({Key? key}) : super(key: key);
+  const FeedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

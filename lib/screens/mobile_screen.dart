@@ -1,13 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/add_post_screen.dart';
-import 'package:instagram/screens/feed_screen.dart';
-import 'package:instagram/screens/profile_screen.dart';
-import 'package:instagram/screens/search_screen.dart';
-import 'package:instagram/utils/colors.dart';
+import 'package:instaclone/screens/profile_screen.dart';
+import 'package:instaclone/screens/search_screen.dart';
+
+
+import '../utils/color.dart';
+import 'add_post_screen.dart';
+import 'feed_screen.dart';
 
 class MobileScreen extends StatefulWidget {
-  const MobileScreen({Key? key}) : super(key: key);
+  const MobileScreen({super.key});
 
   @override
   State<MobileScreen> createState() => _MobileScreenState();
@@ -34,17 +36,17 @@ void onTapped(int index){
    // UserModel user = Provider.of<UserProvider>(context).getUser;
     return Scaffold(
       body:PageView(
+        controller: pageController,
+        onPageChanged:onPageChanged ,
+        physics: const NeverScrollableScrollPhysics(),
         children: const [
           FeedScreen(),
           SearchScreen(),
           AddPostScreen(),
-          Text('like'),
+          Center(child: Text('like')),
           ProfileScreen(),
 
         ],
-        controller: pageController,
-        onPageChanged:onPageChanged ,
-        physics: const NeverScrollableScrollPhysics(),
       ),
       bottomNavigationBar: CupertinoTabBar(
         backgroundColor: mobileBackgroundColor,

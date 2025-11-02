@@ -22,37 +22,37 @@ class AuthMethods {
 
   /// ✨ Register a new user with FirebaseAuth + Firestore + Storage
   Future<String> signUpUser({
-    required String email,
-    required String password,
-    required String userName,
-    required String bio,
-    required Uint8List file,
+   required UserModel user,
+    required Uint8List? file,
   }) async {
     String result = 'Some error occurred';
 
     try {
-      if (email.isEmpty || password.isEmpty || bio.isEmpty || userName.isEmpty) {
+      if (user.email!.isEmpty || user.password!.isEmpty || user.bio!.isEmpty || user.userName!.isEmpty) {
         return 'Please fill all fields';
       }
 
       // Create account
       final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: user.email!,
+        password: user.password!,
       );
 
       final uid = userCredential.user!.uid;
 
       // Upload profile image
       final photoUrl = await StorageMethods()
-          .uploadImageToStorage('profilePics', file, false);
+          .uploadImageToStorage('profilePics', file!, false);
+
+
+
 
       // Create user model
       final newUser = UserModel(
         id: uid,
-        email: email,
-        userName: userName,
-        bio: bio,
+        email: user.email,
+        userName: user.userName,
+        bio: user.bio,
         photoUrl: photoUrl,
         followers: [],
         followings: [],

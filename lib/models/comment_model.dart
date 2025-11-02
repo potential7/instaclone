@@ -7,8 +7,8 @@ class CommentModel {
   String userId;
   String name;
   String profilePicture;
-  Timestamp createdAt;
-  Timestamp updatedAt;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   CommentModel({
     this.id,
@@ -17,8 +17,8 @@ class CommentModel {
     required this.userId,
     required this.name,
     required this.profilePicture,
-    required this.createdAt,
-    required this.updatedAt,
+     this.createdAt,
+     this.updatedAt,
   });
 
   /// ✅ Convert model to Firestore data
@@ -44,8 +44,8 @@ class CommentModel {
       userId: data['userId'] ?? '',
       name: data['name'] ?? '',
       profilePicture: data['profilePicture'] ?? '',
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      updatedAt: data['updatedAt'] ?? Timestamp.now(),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
 }

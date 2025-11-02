@@ -8,13 +8,12 @@ class LikeAnimation extends StatefulWidget {
   final bool smallLike;
 
   const LikeAnimation(
-      {Key? key,
+      {super.key,
       this.duration = const Duration(milliseconds: 150),
       required this.child,
       this.onEnd,
       required this.isAnimation,
-      this.smallLike = false})
-      : super(key: key);
+      this.smallLike = false});
 
   @override
   State<LikeAnimation> createState() => _LikeAnimationState();
@@ -63,7 +62,7 @@ class _LikeAnimationState extends State<LikeAnimation>
   @override
   Widget build(BuildContext context) {
     return ScaleTransition(
-      child: widget.child,
-        scale: scale);
+      scale: scale,
+      child: widget.child);
   }
 }

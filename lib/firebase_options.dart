@@ -75,4 +75,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'instaclone-e672f.firebasestorage.app',
     iosBundleId: 'com.example.instaclone',
   );
+
 }

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:instagram/resources/auth_methos.dart';
-import 'package:instagram/screens/sign_up_screen.dart';
-import 'package:instagram/screens/web_screen.dart';
-import 'package:instagram/utils/colors.dart';
-import 'package:instagram/utils/utils.dart';
-import 'package:instagram/widgets/text_field_input.dart';
+import 'package:instaclone/screens/sign_up_screen.dart';
+import 'package:instaclone/screens/web_screen.dart';
 
-import '../responsive/responsive_layout_screen.dart';
+import '../Data/auth_methods.dart';
+import '../responsive/responsive_layerscreen.dart';
+import '../utils/color.dart';
+import '../utils/utils.dart';
+import '../widgets/text_field_input.dart';
 import 'mobile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -33,8 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
-                child: Container(),
                 flex: 2,
+                child: Container(),
               ),
               SvgPicture.asset(
                 'assets/ic_instagram.svg',
@@ -77,13 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   });
                 },
                 child: Container(
-                  child: _isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: primaryColor,
-                          ),
-                        )
-                      : const Text('Login'),
                   width: double.infinity,
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -92,14 +85,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(4))),
                   ),
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: primaryColor,
+                          ),
+                        )
+                      : const Text('Login'),
                 ),
               ),
               const SizedBox(
                 height: 12,
               ),
               Flexible(
-                child: Container(),
                 flex: 2,
+                child: Container(),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
