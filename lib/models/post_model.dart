@@ -45,9 +45,13 @@ class PostModel {
       description: data?['description'],
       userName: data?['userName'],
       createdAt: data?['createdAt'],
-      profileImage: data?['profileImage'],
+      profileImage: (data?['profileImage'] as String?)?.isNotEmpty == true
+          ? data!['profileImage'] as String
+          : null,
       likes: data?['likes'] ?? [],
-      photoUrl: data?['photoUrl'],
+      photoUrl: (data?['photoUrl'] as String?)?.isNotEmpty == true
+          ? data!['photoUrl'] as String
+          : null,
       postId: data?['postId'],
       userId: data?['userId'],
     );

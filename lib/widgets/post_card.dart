@@ -13,11 +13,10 @@ import '../screens/like_animation.dart';
 import '../utils/color.dart';
 import '../utils/utils.dart';
 
-// ignore: must_be_immutable
 class PostCard extends StatefulWidget {
-  PostModel? post;
+  final PostModel? post;
 
-  PostCard({super.key, this.post});
+  const PostCard({super.key, this.post});
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -26,6 +25,7 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool isLikeAnimating = false;
   int numberOfComment = 0;
+  bool isLoadingComments = true;
 
   @override
   void initState() {
@@ -35,26 +35,60 @@ class _PostCardState extends State<PostCard> {
 
   void getComment() async {
     try {
+      // Safety checks before accessing Firestore
+      if (widget.post?.postId == null || widget.post!.postId!.isEmpty) {
+        setState(() => isLoadingComments = false);
+        return;
+      }
+
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('Posts')
-          .doc(widget.post!.id)
+          .doc(widget.post!.postId)
           .collection('Comments')
           .get();
-      numberOfComment = snapshot.docs.length;
+
+      if (mounted) {
+        setState(() {
+          numberOfComment = snapshot.docs.length;
+          isLoadingComments = false;
+        });
+      }
     } catch (e) {
-      print(e.toString());
+      print('Error loading comments: $e');
+      if (mounted) {
+        setState(() => isLoadingComments = false);
+      }
     }
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    UserModel? user = Provider.of<UserProvider>(context).getUser;
+    // Early null checks - return empty widget if data is invalid
+    final post = widget.post;
+    if (post == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Get user from provider with null safety
+    UserModel? user;
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      user = userProvider.getUser;
+    } catch (e) {
+      print('Error getting user from provider: $e');
+      return const SizedBox.shrink();
+    }
+
+    if (user == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       color: mobileBackgroundColor,
       child: Column(
         children: [
+          // Header - Profile picture and username
           Container(
             padding: const EdgeInsets.symmetric(
               vertical: 4,
@@ -64,7 +98,12 @@ class _PostCardState extends State<PostCard> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundImage: NetworkImage(widget.post!.profileImage!),
+                  backgroundImage: (post.profileImage != null && post.profileImage!.isNotEmpty)
+                      ? NetworkImage(post.profileImage!)
+                      : null,
+                  child: (post.profileImage == null || post.profileImage!.isEmpty)
+                      ? const Icon(Icons.person, size: 16)
+                      : null,
                 ),
                 Expanded(
                   child: Padding(
@@ -74,8 +113,8 @@ class _PostCardState extends State<PostCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.post!.userName!,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          post.userName ?? 'Unknown',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ],
                     ),
@@ -93,15 +132,19 @@ class _PostCardState extends State<PostCard> {
                             children: ['Delete']
                                 .map(
                                   (e) => InkWell(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                        horizontal: 16,
-                                      ),
-                                    ),
-                                    onTap: () {},
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 16,
                                   ),
-                                )
+                                  child: Text(e),
+                                ),
+                                onTap: () {
+                                  // Add delete functionality here
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            )
                                 .toList(),
                           ),
                         );
@@ -113,16 +156,20 @@ class _PostCardState extends State<PostCard> {
               ],
             ),
           ),
+
+          // Post Image with double-tap to like
           GestureDetector(
             onDoubleTap: () async {
-              await FirestoreMethods().likePost(
-                postId: widget.post!.id!,
-                userId: user.id!,
-                likes: widget.post!.likes!,
-              );
-              setState(() {
-                isLikeAnimating = true;
-              });
+              if (post.postId != null && user!.id != null && post.likes != null) {
+                await FirestoreMethods().likePost(
+                  postId: post.postId!,
+                  userId: user.id!,
+                  likes: post.likes!,
+                );
+                setState(() {
+                  isLikeAnimating = true;
+                });
+              }
             },
             child: Stack(
               alignment: Alignment.center,
@@ -130,9 +177,35 @@ class _PostCardState extends State<PostCard> {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.35,
                   width: double.infinity,
-                  child: Image.network(
-                    widget.post!.photoUrl!,
+                  child: (post.photoUrl != null && post.photoUrl!.isNotEmpty)
+                      ? Image.network(
+                    post.photoUrl!,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[800],
+                        child: const Center(
+                          child: Icon(Icons.broken_image, size: 50),
+                        ),
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
+                  )
+                      : Container(
+                    color: Colors.grey[800],
+                    child: const Center(
+                      child: Icon(Icons.image_not_supported, size: 50),
+                    ),
                   ),
                 ),
                 AnimatedOpacity(
@@ -156,27 +229,33 @@ class _PostCardState extends State<PostCard> {
               ],
             ),
           ),
+
+          // Action buttons - Like, Comment, Share, Bookmark
           Row(
             children: [
               LikeAnimation(
-                isAnimation: widget.post!.likes!.contains(user.id),
+                isAnimation: post.likes?.contains(user.id) ?? false,
                 smallLike: true,
                 child: IconButton(
                   onPressed: () async {
-                    await FirestoreMethods().likePost(
-                      postId: widget.post!.id!,
-                      userId: user.id!,
-                      likes: widget.post!.likes!,
-                    );
+                    if (post.postId != null && user!.id != null && post.likes != null) {
+                      await FirestoreMethods().likePost(
+                        postId: post.postId!,
+                        userId: user.id!,
+                        likes: post.likes!,
+                      );
+                    }
                   },
-                  icon: widget.post!.likes!.contains(user.id)
+                  icon: (post.likes?.contains(user.id) ?? false)
                       ? const Icon(Icons.favorite, color: Colors.red)
                       : const Icon(Icons.favorite_border),
                 ),
               ),
               IconButton(
                 onPressed: () {
-                  push(context, CommentScreen(postId: widget.post!.id));
+                  if (post.postId != null) {
+                    push(context, CommentScreen(postId: post.postId));
+                  }
                 },
                 icon: const Icon(Icons.comment_outlined),
               ),
@@ -186,27 +265,33 @@ class _PostCardState extends State<PostCard> {
                   alignment: Alignment.bottomRight,
                   child: IconButton(
                     onPressed: () {},
-                    icon: const Icon(Icons.bookmark_add),
+                    icon: const Icon(Icons.bookmark_border),
                   ),
                 ),
               ),
             ],
           ),
+
+          // Post details - Likes, Description, Comments, Time
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Likes count
                 DefaultTextStyle(
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall!.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall!
+                      .copyWith(fontWeight: FontWeight.w800),
                   child: Text(
-                    '${widget.post!.likes!.length}likes',
+                    '${post.likes?.length ?? 0} likes',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
+
+                // Username and description
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.only(top: 8),
@@ -215,20 +300,36 @@ class _PostCardState extends State<PostCard> {
                       style: const TextStyle(color: Colors.white),
                       children: [
                         TextSpan(
-                          text: widget.post!.userName,
+                          text: post.userName ?? 'Unknown',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        TextSpan(text: ' ${widget.post!.description}'),
+                        TextSpan(text: ' ${post.description ?? ''}'),
                       ],
                     ),
                   ),
                 ),
+
+                // View comments
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    if (post.postId != null) {
+                      push(context, CommentScreen(postId: post.postId));
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Text(
-                      'View all $numberOfComment comments',
+                    child: isLoadingComments
+                        ? const Text(
+                      'Loading comments...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: secondaryColor,
+                      ),
+                    )
+                        : Text(
+                      numberOfComment == 0
+                          ? 'Be the first to comment'
+                          : 'View all $numberOfComment comments',
                       style: const TextStyle(
                         fontSize: 16,
                         color: secondaryColor,
@@ -236,8 +337,12 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ),
                 ),
+
+                // Time posted
                 Text(
-                  timeago.format(DateTime.parse(widget.post!.createdAt!)),
+                  post.createdAt != null
+                      ? timeago.format(DateTime.parse(post.createdAt!))
+                      : 'Unknown time',
                   style: const TextStyle(fontSize: 16, color: secondaryColor),
                 ),
               ],

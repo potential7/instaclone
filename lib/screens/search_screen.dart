@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:provider/provider.dart';
 import '../models/post_Model.dart';
-import '../models/user_model.dart';
+import '../provider/search_provider.dart';
 import '../utils/color.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -15,87 +14,61 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   TextEditingController searchController = TextEditingController();
-  bool showUsers = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SearchProvider>().getAllPosts();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SearchProvider>();
     return Scaffold(
-      body: showUsers
-          ? FutureBuilder(
-              future: FirebaseFirestore.instance
-                  .collection('Users')
-                  .where('userName',
-                      isGreaterThanOrEqualTo: searchController.text)
-                  .get(),
-              builder: (context,
-                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: primaryColor,
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
-                  itemBuilder: (context, index) {
-                    List<UserModel> users = snapshot.data!.docs
-                        .map((e) => UserModel.fromMap(e))
-                        .toList();
-                    UserModel user = users[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: NetworkImage(user.photoUrl!),
-                      ),
-                      title: Text(user.userName!),
-                    );
-                  },
-                );
-              },
-            )
-          : FutureBuilder(
-              future: FirebaseFirestore.instance.collection('Posts').get(),
-              builder: (context,
-                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: primaryColor,
-                    ),
-                  );
-                }
-                List<PostModel> posts = snapshot.data!.docs
-                    .map((e) => PostModel.fromMap(e))
-                    .toList();
-
-                return StaggeredGridView.countBuilder(
-                  itemCount: posts.length,
-                  itemBuilder: (context, index) {
-                    PostModel post = posts[index];
-                    return Image.network(post.photoUrl!);
-                  },
-                  mainAxisSpacing: 11,
-                  crossAxisSpacing: 10,
-                  crossAxisCount: 3,
-                  staggeredTileBuilder: (index) => StaggeredTile.count(
-                      (index % 7 == 0) ? 2 : 1, (index % 7 == 0) ? 2 : 1),
-                );
-              },
-            ),
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
         title: TextFormField(
           controller: searchController,
-          decoration: const InputDecoration(
-            labelText: 'Search for a User',
-          ),
+          decoration: const InputDecoration(labelText: 'Search for a User'),
           onFieldSubmitted: (String text) {
-            setState(() {
-              showUsers = true;
-            });
+            provider.searchUser(text);
           },
         ),
       ),
+      body: provider.isLoading
+          ? Center(child: CircularProgressIndicator(color: primaryColor))
+          : provider.showUser
+          ? provider.users.isEmpty
+          ?  Center(child: Text('No users found'))
+          : ListView.builder(
+              itemCount: provider.users.length,
+              itemBuilder: (context, index) {
+
+                final user = provider.users[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(user.photoUrl!),
+                  ),
+                  title: Text(user.userName!),
+                );
+              },
+            )
+          : StaggeredGridView.countBuilder(
+              itemCount: provider.posts.length,
+              itemBuilder: (context, index) {
+                PostModel post = provider.posts[index];
+                return Image.network(post.photoUrl!);
+              },
+              mainAxisSpacing: 11,
+              crossAxisSpacing: 10,
+              crossAxisCount: 3,
+              staggeredTileBuilder: (index) => StaggeredTile.count(
+                (index % 7 == 0) ? 2 : 1,
+                (index % 7 == 0) ? 2 : 1,
+              ),
+            ),
     );
   }
 }
