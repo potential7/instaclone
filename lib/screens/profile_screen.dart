@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:instaclone/Data/auth_methods.dart';
+import 'package:instaclone/provider/user_provider.dart';
+import 'package:provider/provider.dart';
 import '../utils/color.dart';
 import '../widgets/follow_button.dart';
 
@@ -12,10 +15,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final user = context.read<UserProvider>().getUser;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
-        title: const Text('Username'),
+        title: Text(user?.userName ?? ""),
         centerTitle: false,
       ),
       body: ListView(
@@ -41,6 +45,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 FollowButton(),
+
+                TextButton(
+                  onPressed: () => AuthMethods().signOut(),
+                  child: Text('Sign Out', style: TextStyle(fontSize: 18)),
+                ),
               ],
             ),
           ),
@@ -58,13 +67,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             number.toString(),
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           Container(
-            margin:const EdgeInsets.only(top: 4),
+            margin: const EdgeInsets.only(top: 4),
             child: Text(
               label,
               style: const TextStyle(

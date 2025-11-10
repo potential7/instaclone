@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/post_Model.dart';
 import '../utils/color.dart';
 import '../widgets/post_card.dart';
+
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
 
@@ -13,34 +14,42 @@ class FeedScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: false,
         backgroundColor: mobileBackgroundColor,
-        title: SvgPicture.asset('assets/ic_instagram.svg',color: Colors.white,height: 32,),
+        title: SvgPicture.asset(
+          'assets/ic_instagram.svg',
+          color: Colors.white,
+          height: 32,
+        ),
         actions: [
-          IconButton(onPressed:(){
-
-          }, icon: const Icon(Icons.messenger_outline_rounded)),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.messenger_outline_rounded),
+          ),
         ],
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance.collection('Posts').snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot<Map<String,dynamic>>> snapshot){
-          if(snapshot.connectionState == ConnectionState.waiting){
-            return const Center(child: CircularProgressIndicator(),);
-          }
-          if(snapshot.hasData){
-            return ListView.builder(
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context,index){
-                List<PostModel> posts = snapshot.data!.docs.map((e)=>PostModel.fromMap(e)).toList();
-                PostModel? post = posts[index];
-                return  PostCard(
-                  post: post,
+        builder:
+            (
+              context,
+              AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot,
+            ) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasData) {
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    List<PostModel> posts = snapshot.data!.docs
+                        .map((e) => PostModel.fromMap(e))
+                        .toList();
+                    PostModel? post = posts[index];
+                    return PostCard(post: post);
+                  },
                 );
-              },
-            );
-
-          }
-           return Container();
-        },
+              }
+              return Container();
+            },
       ),
     );
   }

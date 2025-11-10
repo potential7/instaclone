@@ -18,9 +18,50 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final AuthMethods _authMethods = AuthMethods();
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> handleLogin() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _authMethods.loginUser(
+          _emailController.text.trim(),
+          _passwordController.text);
+
+      if(!mounted) return;
+      if (result.isSuccess){
+        showSnackBar('Welcome Back', context);
+        pushReplacement(context, ResponsiveLayoutScreen(mobileScreenLayout: MobileScreen(),
+            webScreenLayout: WebScreen()));
+      }else {
+        showSnackBar(result.message, context);
+      }
+    }catch (e){
+      if (mounted){
+        showSnackBar('An unexpected error occurred', context);
+      }
+    }finally {
+      if(mounted){
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+
+
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,50 +73,28 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
-                flex: 2,
-                child: Container(),
-              ),
+              Flexible(flex: 2, child: Container()),
               SvgPicture.asset(
                 'assets/ic_instagram.svg',
                 color: primaryColor,
                 height: 64,
               ),
-              const SizedBox(
-                height: 64,
-              ),
+              const SizedBox(height: 64),
               TextFieldInput(
-                  textInputType: TextInputType.emailAddress,
-                  controller: emailController,
-                  hintText: 'Email'),
-              const SizedBox(
-                height: 24,
+                textInputType: TextInputType.emailAddress,
+                controller: _emailController,
+                hintText: 'Email',
               ),
+              const SizedBox(height: 24),
               TextFieldInput(
                 textInputType: TextInputType.text,
-                controller: passwordController,
+                controller: _passwordController,
                 hintText: 'Password',
                 isPassword: true,
               ),
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
               GestureDetector(
-                onTap: () async {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  String res = await AuthMethods()
-                      .loginUser(emailController.text, passwordController.text);
-                  if (res == "Success") {
-                    showSnackBar(res, context);
-                    pushReplacement(context, const ResponsiveLayoutScreen(mobileScreenLayout: MobileScreen(), webScreenLayout: WebScreen()));
-
-                  }
-                  setState(() {
-                    _isLoading = false;
-                  });
-                },
+                onTap: _isLoading? null : handleLogin,
                 child: Container(
                   width: double.infinity,
                   alignment: Alignment.center,
@@ -83,24 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const ShapeDecoration(
                     color: blueColor,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(4))),
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
                   ),
                   child: _isLoading
                       ? const Center(
-                          child: CircularProgressIndicator(
-                            color: primaryColor,
-                          ),
+                          child: CircularProgressIndicator(color: primaryColor),
                         )
                       : const Text('Login'),
                 ),
               ),
-              const SizedBox(
-                height: 12,
-              ),
-              Flexible(
-                flex: 2,
-                child: Container(),
-              ),
+              const SizedBox(height: 12),
+              Flexible(flex: 2, child: Container()),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -118,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

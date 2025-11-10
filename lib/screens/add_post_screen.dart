@@ -115,7 +115,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final UserModel user = Provider.of<UserProvider>(context).getUser;
+    final UserModel? user = Provider.of<UserProvider>(context).getUser;
 
     return _file == null
         ? Center(
@@ -136,7 +136,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
           TextButton(
             onPressed: _isLoading
                 ? null
-                : () => postImage(user.id!, user.userName!, user.photoUrl!),
+                : () => postImage(user?.id ?? '', user?.userName ?? '', user?.photoUrl ?? ''),
             child: const Text(
               'Post',
               style: TextStyle(
@@ -158,7 +158,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundImage: NetworkImage(user.photoUrl!),
+                backgroundImage: NetworkImage(user?.photoUrl ?? ''),
                 radius: 22,
               ),
               const SizedBox(width: 10),

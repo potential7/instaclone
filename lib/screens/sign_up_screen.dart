@@ -116,11 +116,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       bio: bioController.text,
                       userName: userNameController.text,
                     );
-                    final res = await AuthMethods().signUpUser(user: user, file: null, );
-                    print("Signup result: $res");
-
-                    if (res != 'Success') {
-                      showSnackBar(res, context);
+                    final result = await AuthMethods().signUp(user: user, file: _image, );
+                    if (result.isSuccess != true) {
+                      showSnackBar(result.message, context);
                     } else {
                       pushReplacement(
                         context,
@@ -161,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
+                    const Text("Already have an account?"),
           
                     GestureDetector(
                       onTap: () {
@@ -169,7 +167,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: const Text("Sign Up"),
+                        child: const Text("Sign In"),
                       ),
                     ),
                   ],
